@@ -12,6 +12,8 @@ import pandas as pd
 from torch.utils.data import DataLoader, Dataset, ConcatDataset
 import time
 
+# torch.cuda.device(3)
+
 def readfile(path, label):
     # label 是一個 boolean variable，代表需不需要回傳 y 值
     image_dir = sorted(os.listdir(path))
@@ -46,9 +48,6 @@ def readfile(path, label):
       return x, y
     else:
       return x
-
-
-# In[14]:
 
 
 try:
@@ -112,7 +111,7 @@ class Classifier(nn.Module):
             nn.BatchNorm2d(512),
             nn.ReLU(),
             nn.MaxPool2d(2, 2, 0),       # [512, 8, 8]
-            
+
             nn.Conv2d(512, 512, 3, 1, 1), # [512, 8, 8]
             nn.BatchNorm2d(512),
             nn.ReLU(),
@@ -145,10 +144,12 @@ class Classifier(nn.Module):
 
 
 model_best = torch.load('model.torch')
+print('model loaded')
 
 test_set = ImgDataset(test_x, transform=test_transform)
-test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=False)
+test_loader = DataLoader(test_set, batch_size=64, shuffle=False)
 
+print('predicting')
 model_best.eval()
 prediction = []
 with torch.no_grad():
@@ -157,6 +158,7 @@ with torch.no_grad():
         test_label = np.argmax(test_pred.cpu().data.numpy(), axis=1)
         for y in test_label:
             prediction.append(y)
+print('predicted')
 
 try:
     output_fpath = sys.argv[2]
@@ -168,6 +170,6 @@ if di != '':
 
 with open(output_fpath, 'w') as f:
     f.write('Id,Category\n')
-    for i, y in  enumerate(prediction):
+    for i, y in enumerate(prediction):
         f.write('{},{}\n'.format(i, y))
 
