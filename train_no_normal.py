@@ -363,7 +363,7 @@ for epoch in range(num_epoch):
 
 
 # save model
-torch.save(model_best, 'model.torch')
+torch.save(model_best, 'model_no_normal.torch')
 
 
 # # Testing
@@ -394,7 +394,7 @@ with torch.no_grad():
 
 
 #將結果寫入 csv 檔
-with open("predict.csv", 'w') as f:
+with open("predict_no_normal.csv", 'w') as f:
     f.write('Id,Category\n')
     for i, y in  enumerate(prediction):
         f.write('{},{}\n'.format(i, y))
