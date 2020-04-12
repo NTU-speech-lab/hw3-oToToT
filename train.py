@@ -27,7 +27,6 @@ import pandas as pd
 from torch.utils.data import DataLoader, Dataset, ConcatDataset
 import time
 
-
 # #Read image
 # 利用 OpenCV (cv2) 讀入照片並存放在 numpy array 中
 
@@ -261,50 +260,50 @@ class Classifier(nn.Module):
 # In[8]:
 
 
-model = Classifier().cuda()
-# model = Classifier().cpu()
-loss = nn.CrossEntropyLoss() # 因為是 classification task，所以 loss 使用 CrossEntropyLoss
-optimizer = torch.optim.Adam(model.parameters(), lr=0.001) # optimizer 使用 Adam
-num_epoch = 300
+# model = Classifier().cuda()
+# # model = Classifier().cpu()
+# loss = nn.CrossEntropyLoss() # 因為是 classification task，所以 loss 使用 CrossEntropyLoss
+# optimizer = torch.optim.Adam(model.parameters(), lr=0.001) # optimizer 使用 Adam
+# num_epoch = 300
 
-# # use apex to optimize
-# model, optimizer = amp.initialize(model, optimizer, opt_level="O2")
+# # # use apex to optimize
+# # model, optimizer = amp.initialize(model, optimizer, opt_level="O2")
 
-for epoch in range(num_epoch):
-    epoch_start_time = time.time()
-    train_acc = 0.0
-    train_loss = 0.0
-    val_acc = 0.0
-    val_loss = 0.0
+# for epoch in range(num_epoch):
+    # epoch_start_time = time.time()
+    # train_acc = 0.0
+    # train_loss = 0.0
+    # val_acc = 0.0
+    # val_loss = 0.0
 
-    model.train() # 確保 model 是在 train model (開啟 Dropout 等...)
-    for i, data in enumerate(train_loader):
-        optimizer.zero_grad() # 用 optimizer 將 model 參數的 gradient 歸零
-        train_pred = model(data[0].cuda()) # 利用 model 得到預測的機率分佈 這邊實際上就是去呼叫 model 的 forward 函數
-        batch_loss = loss(train_pred, data[1].cuda()) # 計算 loss （注意 prediction 跟 label 必須同時在 CPU 或是 GPU 上）
-#         train_pred = model(data[0].cpu())
-#         batch_loss = loss(train_pred, data[1].cpu())
-#         with amp.scale_loss(batch_loss, optimizer) as scaled_loss:
-#             scaled_loss.backward() # 利用 back propagation 算出每個參數的 gradient
-        batch_loss.backward() 
-        optimizer.step() # 以 optimizer 用 gradient 更新參數值
+    # model.train() # 確保 model 是在 train model (開啟 Dropout 等...)
+    # for i, data in enumerate(train_loader):
+        # optimizer.zero_grad() # 用 optimizer 將 model 參數的 gradient 歸零
+        # train_pred = model(data[0].cuda()) # 利用 model 得到預測的機率分佈 這邊實際上就是去呼叫 model 的 forward 函數
+        # batch_loss = loss(train_pred, data[1].cuda()) # 計算 loss （注意 prediction 跟 label 必須同時在 CPU 或是 GPU 上）
+# #         train_pred = model(data[0].cpu())
+# #         batch_loss = loss(train_pred, data[1].cpu())
+# #         with amp.scale_loss(batch_loss, optimizer) as scaled_loss:
+# #             scaled_loss.backward() # 利用 back propagation 算出每個參數的 gradient
+        # batch_loss.backward() 
+        # optimizer.step() # 以 optimizer 用 gradient 更新參數值
 
-        train_acc += np.sum(np.argmax(train_pred.cpu().data.numpy(), axis=1) == data[1].numpy())
-        train_loss += batch_loss.item()
+        # train_acc += np.sum(np.argmax(train_pred.cpu().data.numpy(), axis=1) == data[1].numpy())
+        # train_loss += batch_loss.item()
     
-    model.eval()
-    with torch.no_grad():
-        for i, data in enumerate(val_loader):
-            val_pred = model(data[0].cuda())
-            batch_loss = loss(val_pred, data[1].cuda())
-#             val_pred = model(data[0].cpu())
-#             batch_loss = loss(val_pred, data[1].cpu())
+    # model.eval()
+    # with torch.no_grad():
+        # for i, data in enumerate(val_loader):
+            # val_pred = model(data[0].cuda())
+            # batch_loss = loss(val_pred, data[1].cuda())
+# #             val_pred = model(data[0].cpu())
+# #             batch_loss = loss(val_pred, data[1].cpu())
 
-            val_acc += np.sum(np.argmax(val_pred.cpu().data.numpy(), axis=1) == data[1].numpy())
-            val_loss += batch_loss.item()
+            # val_acc += np.sum(np.argmax(val_pred.cpu().data.numpy(), axis=1) == data[1].numpy())
+            # val_loss += batch_loss.item()
 
-        #將結果 print 出來
-        print('[%03d/%03d] %2.2f sec(s) Train Acc: %3.6f Loss: %3.6f | Val Acc: %3.6f loss: %3.6f' %             (epoch + 1, num_epoch, time.time()-epoch_start_time,              train_acc/train_set.__len__(), train_loss/train_set.__len__(), val_acc/val_set.__len__(), val_loss/val_set.__len__()))
+        # #將結果 print 出來
+        # print('[%03d/%03d] %2.2f sec(s) Train Acc: %3.6f Loss: %3.6f | Val Acc: %3.6f loss: %3.6f' %             (epoch + 1, num_epoch, time.time()-epoch_start_time,              train_acc/train_set.__len__(), train_loss/train_set.__len__(), val_acc/val_set.__len__(), val_loss/val_set.__len__()))
 
 
 # 得到好的參數後，我們使用 training set 和 validation set 共同訓練（資料量變多，模型效果較好）
@@ -318,7 +317,7 @@ train_val_set = ConcatDataset([
     ImgDataset(train_val_x, train_val_y, train_transform1),
     ImgDataset(train_val_x, train_val_y, train_transform2),
 ])
-train_val_loader = DataLoader(train_val_set, batch_size=batch_size, shuffle=True)
+train_val_loader = DataLoader(train_val_set, batch_size=batch_size, shuffle=True, num_workers=16)
 
 print([train_val_x[:,:,:,0].mean(), train_val_x[:,:,:,1].mean(), train_val_x[:,:,:,2].mean()])
 print([train_val_x[:,:,:,0].std(), train_val_x[:,:,:,1].std(), train_val_x[:,:,:,2].std()])
@@ -331,7 +330,7 @@ model_best = Classifier().cuda()
 # model_best = Classifier().cpu()
 loss = nn.CrossEntropyLoss() # 因為是 classification task，所以 loss 使用 CrossEntropyLoss
 optimizer = torch.optim.Adam(model_best.parameters(), lr=0.001) # optimizer 使用 Adam
-num_epoch = 350
+num_epoch = 400
 
 # use apex to optimize
 # model_best, optimizer = amp.initialize(model_best, optimizer, opt_level="O3")
