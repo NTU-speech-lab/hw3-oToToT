@@ -58,10 +58,6 @@ try:
 except:
     workspace_dir = './food-11'
 print("Reading data")
-train_x, train_y = readfile(os.path.join(workspace_dir, "training"), True)
-print("Size of training data = {}".format(len(train_x)))
-val_x, val_y = readfile(os.path.join(workspace_dir, "validation"), True)
-print("Size of validation data = {}".format(len(val_x)))
 test_x = readfile(os.path.join(workspace_dir, "testing"), False)
 print("Size of Testing data = {}".format(len(test_x)))
 
@@ -79,46 +75,6 @@ print("Size of Testing data = {}".format(len(test_x)))
 # In[5]:
 
 
-# training 時做 data augmentation
-train_transform1 = transforms.Compose([
-    transforms.ToPILImage(),
-    transforms.RandomChoice([
-        transforms.RandomVerticalFlip(),
-        transforms.RandomHorizontalFlip(),
-        transforms.RandomPerspective()
-    ]),
-    transforms.RandomChoice([
-        transforms.RandomAffine(10), # 隨機線性轉換
-        transforms.RandomRotation(40)
-    ]),
-    transforms.ColorJitter(), # 隨機色溫等
-    transforms.ToTensor(), # 將圖片轉成 Tensor，並把數值 normalize 到 [0,1] (data normalization)
-#     transforms.Normalize(
-#         [77.89311144813877 / 255, 102.3587941606983 / 255, 126.59376063616554 / 255],
-#         [72.80305392379675 / 255, 75.35438507973123 / 255, 79.31408066842762 / 255]
-#     )
-])
-train_transform2 = transforms.Compose([
-    transforms.ToPILImage(),
-    transforms.RandomOrder([
-        transforms.RandomChoice([
-            transforms.RandomHorizontalFlip(),
-            transforms.RandomPerspective()
-        ]),
-        transforms.RandomAffine(30), # 隨機線性轉換
-        transforms.RandomResizedCrop((IMAGE_SIZE, IMAGE_SIZE), scale=(0.5, 1.0)), # 隨機子圖
-    ]),
-    transforms.RandomChoice([
-        transforms.ColorJitter(), # 隨機色溫等
-        transforms.RandomGrayscale(),
-    ]),
-    transforms.ToTensor(), # 將圖片轉成 Tensor，並把數值 normalize 到 [0,1] (data normalization)
-    transforms.RandomErasing(0.2),
-#     transforms.Normalize(
-#         [77.89311144813877 / 255, 102.3587941606983 / 255, 126.59376063616554 / 255],
-#         [72.80305392379675 / 255, 75.35438507973123 / 255, 79.31408066842762 / 255]
-#     )
-])
 # testing 時不需做 data augmentation
 test_transform = transforms.Compose([
     transforms.ToPILImage(),                                    
@@ -153,15 +109,6 @@ class ImgDataset(Dataset):
 
 
 batch_size = 64
-train_set = ConcatDataset([
-    ImgDataset(train_x, train_y, train_transform1),
-    ImgDataset(train_x, train_y, train_transform2)
-])
-val_set = ImgDataset(val_x, val_y, test_transform)
-train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=16)
-val_loader = DataLoader(val_set, batch_size=batch_size, shuffle=False, num_workers=16)
-
-
 # # Model
 
 # In[7]:
