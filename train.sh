@@ -1,3 +1,3 @@
-#!/bin/bash
+#1/bin/sh
 
-python3 -W ignore train.py $1
+python3 -W ignore hw3_VGG.py $1
